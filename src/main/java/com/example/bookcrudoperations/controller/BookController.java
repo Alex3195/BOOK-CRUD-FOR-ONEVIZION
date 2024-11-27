@@ -1,12 +1,12 @@
 package com.example.bookcrudoperations.controller;
 
 import com.example.bookcrudoperations.model.Book;
-import com.example.bookcrudoperations.service.BookService;
+import com.example.bookcrudoperations.repository.BookRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -14,33 +14,27 @@ import java.util.Map;
 @RequestMapping("/books")
 public class BookController {
 
-    private final BookService bookService;
+    @Autowired
+    private BookRepository bookRepository;
 
-    public BookController(BookService bookService) {
-        this.bookService = bookService;
+    @GetMapping
+    public List<Book> getAllBooksSortedByTitleDesc() {
+        return bookRepository.findAllBooksSortedByTitleDesc();
     }
 
-    @GetMapping("/sorted")
-    public ResponseEntity<List<Book>> getAllBooksSortedByTitle() {
-        List<Book> books = bookService.getAllBooksSortedByTitle();
-        return new ResponseEntity<>(books, HttpStatus.OK);
+    @PostMapping
+    public ResponseEntity<Void> addBook(@RequestBody Book book) {
+        bookRepository.addBook(book);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<String> addBook(@RequestBody Book book) {
-        bookService.addBook(book);
-        return new ResponseEntity<>("Book added successfully", HttpStatus.CREATED);
+    @GetMapping("/grouped-by-author")
+    public List<Book> getBooksGroupedByAuthor() {
+        return bookRepository.findBooksGroupedByAuthor();
     }
 
-    @GetMapping("/grouped")
-    public ResponseEntity<Map<String, List<Book>>> getAllBooksGroupedByAuthor() {
-        Map<String, List<Book>> books = bookService.getAllBooksGroupedByAuthor();
-        return new ResponseEntity<>(books, HttpStatus.OK);
-    }
-
-    @GetMapping("/authors/{character}")
-    public ResponseEntity<List<Map<String, ? extends Serializable>>> getAuthorsWithCharacterCount(@PathVariable char character) {
-        List<Map<String, ? extends Serializable>> result = bookService.getAuthorsWithCharacterCount(character);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+    @GetMapping("/top-authors-by-character")
+    public List<Map<String, Object>> getAuthorsByCharacterFrequency(@RequestParam char character) {
+        return bookRepository.findAuthorsByCharacterFrequency(character);
     }
 }
